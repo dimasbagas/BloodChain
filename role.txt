@@ -1,0 +1,33 @@
+Terdapat 4 Role dalam sistem ini:
+1. ADMIN
+2. PMI
+3. HOSPITAL (Rumah Sakit)
+4. DONOR
+
+Berikut adalah akun yang sudah terdaftar di database:
+- Role: DONOR
+  Email: a@a.com
+  Nama: responden
+
+- Role: PMI
+  Email: pmi@gmail.com
+  Nama: pmi
+
+- Role: HOSPITAL
+  Email: rumahsakit@gmail.com
+  Nama: rumah sakit
+
+- Role: PMI (Jakarta)
+  Email: pmi.jakarta@gmail.com
+  Nama: PMI Jakarta
+  Password: password123
+
+- Role: PMI (Bandung)
+  Email: pmi.bandung@gmail.com
+  Nama: PMI Bandung
+  Password: password123
+
+- Role: PMI (Surabaya)
+  Email: pmi.surabaya@gmail.com
+  Nama: PMI Surabaya
+  Password: password123

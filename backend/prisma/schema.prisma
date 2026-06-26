@@ -1,0 +1,545 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  PMI
+  HOSPITAL
+  DONOR
+}
+
+enum BloodType {
+  A
+  B
+  AB
+  O
+}
+
+enum Rhesus {
+  POSITIVE
+  NEGATIVE
+}
+
+enum BloodComponent {
+  WB
+  PRC
+  TC
+  FFP
+}
+
+enum DonationStatus {
+  REGISTERED
+  SCREENING
+  ELIGIBLE
+  NOT_ELIGIBLE
+  DONATED
+  REJECTED
+}
+
+enum ScreeningStatus {
+  PENDING
+  PASSED
+  FAILED
+}
+
+enum InventoryStatus {
+  AVAILABLE
+  RESERVED
+  DISTRIBUTED
+  USED
+  EXPIRED
+}
+
+enum RequestType {
+  REGULAR
+  CITO
+}
+
+enum RequestStatus {
+  PENDING
+  PROCESSING
+  APPROVED
+  REJECTED
+  SHIPPED
+  COMPLETED
+}
+
+enum DistributionStatus {
+  PACKING
+  ON_COURIER
+  ARRIVED
+  COMPLETED
+}
+
+enum TransferStatus {
+  REQUESTED
+  APPROVED
+  SHIPPED
+  RECEIVED
+  REJECTED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  role          Role
+  fullName      String
+  phone         String?
+  photoUrl      String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  donor         Donor?
+  pmi           PMI?
+  hospital      Hospital?
+  auditLogs     AuditLog[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Donor {
+  id              String          @id @default(cuid())
+  userId          String          @unique
+  nik             String          @unique
+  bloodType       BloodType
+  rhesus          Rhesus
+  birthDate       DateTime
+  weightKg        Float
+  address         String
+  city            String
+  province        String
+  latitude        Float?
+  longitude       Float?
+  isActive        Boolean         @default(true)
+  lastDonationAt  DateTime?
+  totalDonations  Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  user            User            @relation(fields: [userId], references: [id])
+  donations       Donation[]
+  healthQuestionnaires HealthQuestionnaire[]
+  eligibilityChecks     EligibilityCheck[]
+
+  @@map("donors")
+}
+
+model PMI {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  name        String
+  code        String   @unique
+  address     String
+  city        String
+  province    String
+  latitude    Float
+  longitude   Float
+  phone       String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user                User               @relation(fields: [userId], references: [id])
+  bloodInventories    BloodInventory[]
+  bloodRequests       BloodRequest[]     @relation("PMIRequests")
+  distributionsOut    Distribution[]     @relation("DistributorPMI")
+  distributionsIn     Distribution[]     @relation("ReceiverPMI")
+  transferRequests    CrossPMITransfer[] @relation("RequestingPMI")
+  transferSupplies    CrossPMITransfer[] @relation("SupplyingPMI")
+  alerts              LowStockAlert[]
+  donations           Donation[]
+
+  @@map("pmis")
+}
+
+model Hospital {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  name        String
+  code        String   @unique
+  address     String
+  city        String
+  province    String
+  latitude    Float
+  longitude   Float
+  phone       String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user            User           @relation(fields: [userId], references: [id])
+  bloodRequests   BloodRequest[]
+  distributions   Distribution[] @relation("HospitalDistributions")
+  donations       Donation[]
+
+  @@map("hospitals")
+}
+
+model Donation {
+  id              String          @id @default(cuid())
+  donorId         String
+  pmiId           String
+  hospitalId      String?
+  donationDate    DateTime        @default(now())
+  status          DonationStatus  @default(REGISTERED)
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  donor           Donor           @relation(fields: [donorId], references: [id])
+  pmi             PMI             @relation(fields: [pmiId], references: [id])
+  hospital        Hospital?       @relation(fields: [hospitalId], references: [id])
+  screening       BloodScreening?
+  bloodBatch      BloodBatch?
+  eligibilityCheck EligibilityCheck?
+  healthQuestionnaire HealthQuestionnaire?
+
+  @@map("donations")
+}
+
+model HealthQuestionnaire {
+  id                  String   @id @default(cuid())
+  donorId             String
+  donationId          String   @unique
+  hasFever            Boolean
+  hasCough            Boolean
+  hasWeightLoss       Boolean
+  hasMedication       Boolean
+  hasTattoo           Boolean
+  hasSurgery          Boolean
+  hasPregnancy        Boolean
+  hasTravelHistory    Boolean
+  hasRiskyBehavior    Boolean
+  additionalInfo      String?
+  createdAt           DateTime @default(now())
+
+  donor               Donor    @relation(fields: [donorId], references: [id])
+  donation            Donation @relation(fields: [donationId], references: [id])
+
+  @@map("health_questionnaires")
+}
+
+model EligibilityCheck {
+  id                  String   @id @default(cuid())
+  donorId             String
+  donationId          String   @unique
+  age                 Int
+  isAgeEligible       Boolean
+  weightKg            Float
+  isWeightEligible    Boolean
+  systolicBP          Int
+  diastolicBP         Int
+  isBloodPressureOk   Boolean
+  hemoglobin          Float
+  isHemoglobinOk      Boolean
+  daysSinceLastDonation Int?
+  isRetentionOk       Boolean
+  isEligible          Boolean
+  rejectionReason     String?
+  checkedBy           String?
+  checkedAt           DateTime @default(now())
+
+  donor               Donor    @relation(fields: [donorId], references: [id])
+  donation            Donation @relation(fields: [donationId], references: [id])
+
+  @@map("eligibility_checks")
+}
+
+model BloodScreening {
+  id              String           @id @default(cuid())
+  donationId      String           @unique
+  hivStatus       ScreeningStatus  @default(PENDING)
+  hepatitisBStatus ScreeningStatus @default(PENDING)
+  hepatitisCStatus ScreeningStatus @default(PENDING)
+  syphilisStatus  ScreeningStatus  @default(PENDING)
+  overallStatus   ScreeningStatus  @default(PENDING)
+  notes           String?
+  testedBy        String?
+  testedAt        DateTime         @default(now())
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  donation        Donation         @relation(fields: [donationId], references: [id])
+
+  @@map("blood_screenings")
+}
+
+model BloodBatch {
+  id              String          @id @default(cuid())
+  donationId      String          @unique
+  batchCode       String          @unique
+  component       BloodComponent
+  bloodType       BloodType
+  rhesus          Rhesus
+  volumeMl        Float
+  barcode         String          @unique
+  expiryDate      DateTime
+  status          InventoryStatus @default(AVAILABLE)
+  pmiId           String
+  location        String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  donation        Donation        @relation(fields: [donationId], references: [id])
+  inventory       BloodInventory?
+  requestItems    RequestItem[]
+  distributionItems DistributionItem[]
+  transferItems   CrossPMITransferItem[]
+
+  @@map("blood_batches")
+}
+
+model BloodInventory {
+  id          String          @id @default(cuid())
+  pmiId       String
+  batchId     String          @unique
+  status      InventoryStatus @default(AVAILABLE)
+  receivedAt  DateTime        @default(now())
+  reservedAt  DateTime?
+  distributedAt DateTime?
+  notes       String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  pmi         PMI             @relation(fields: [pmiId], references: [id])
+  batch       BloodBatch      @relation(fields: [batchId], references: [id])
+
+  @@map("blood_inventories")
+}
+
+model BloodRequest {
+  id              String         @id @default(cuid())
+  requestCode     String         @unique
+  hospitalId      String?
+  pmiId           String
+  requestType     RequestType    @default(REGULAR)
+  status          RequestStatus  @default(PENDING)
+  notes           String?
+  citoReason      String?
+  rejectionReason String?
+  requestedAt     DateTime       @default(now())
+  processedAt     DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  hospital        Hospital?      @relation(fields: [hospitalId], references: [id])
+  pmi             PMI            @relation("PMIRequests", fields: [pmiId], references: [id])
+  items           RequestItem[]
+  distributions   Distribution[]
+
+  @@map("blood_requests")
+}
+
+model RequestItem {
+  id              String        @id @default(cuid())
+  requestId       String
+  batchId         String?
+  component       BloodComponent
+  bloodType       BloodType
+  rhesus          Rhesus
+  quantity        Int
+  fulfilledQty    Int           @default(0)
+  createdAt       DateTime      @default(now())
+
+  request         BloodRequest  @relation(fields: [requestId], references: [id])
+  batch           BloodBatch?   @relation(fields: [batchId], references: [id])
+
+  @@map("request_items")
+}
+
+model Distribution {
+  id              String             @id @default(cuid())
+  distributionCode String            @unique
+  requestId        String?
+  pmiFromId        String
+  pmiToId          String?
+  hospitalId       String?
+  status           DistributionStatus @default(PACKING)
+  courierName      String?
+  courierPhone     String?
+  courierLat       Float?
+  courierLng       Float?
+  startTemp        Float?
+  currentTemp      Float?
+  notes            String?
+  packedAt         DateTime?
+  shippedAt        DateTime?
+  arrivedAt        DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  request          BloodRequest?      @relation(fields: [requestId], references: [id])
+  pmiFrom          PMI                @relation("DistributorPMI", fields: [pmiFromId], references: [id])
+  pmiTo            PMI?               @relation("ReceiverPMI", fields: [pmiToId], references: [id])
+  hospital         Hospital?          @relation("HospitalDistributions", fields: [hospitalId], references: [id])
+  items            DistributionItem[]
+  trackingLogs     DistributionTracking[]
+  temperatureLogs  TemperatureLog[]
+
+  @@map("distributions")
+}
+
+model DistributionItem {
+  id              String     @id @default(cuid())
+  distributionId  String
+  batchId         String
+  quantity        Int
+  createdAt       DateTime   @default(now())
+
+  distribution    Distribution @relation(fields: [distributionId], references: [id])
+  batch           BloodBatch   @relation(fields: [batchId], references: [id])
+
+  @@map("distribution_items")
+}
+
+model DistributionTracking {
+  id              String     @id @default(cuid())
+  distributionId  String
+  location        String
+  latitude        Float?
+  longitude       Float?
+  status          String
+  note            String?
+  timestamp       DateTime   @default(now())
+
+  distribution    Distribution @relation(fields: [distributionId], references: [id])
+
+  @@map("distribution_tracking")
+}
+
+model TemperatureLog {
+  id              String     @id @default(cuid())
+  distributionId  String
+  temperature     Float
+  timestamp       DateTime   @default(now())
+
+  distribution    Distribution @relation(fields: [distributionId], references: [id])
+
+  @@map("temperature_logs")
+}
+
+model CrossPMITransfer {
+  id              String         @id @default(cuid())
+  requestCode     String         @unique
+  requestingPmiId String
+  supplyingPmiId  String
+  status          TransferStatus @default(REQUESTED)
+  distanceKm      Float?
+  notes           String?
+  requestedAt     DateTime       @default(now())
+  approvedAt      DateTime?
+  shippedAt       DateTime?
+  receivedAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  requestingPmi   PMI            @relation("RequestingPMI", fields: [requestingPmiId], references: [id])
+  supplyingPmi    PMI            @relation("SupplyingPMI", fields: [supplyingPmiId], references: [id])
+  items           CrossPMITransferItem[]
+
+  @@map("cross_pmi_transfers")
+}
+
+model CrossPMITransferItem {
+  id              String     @id @default(cuid())
+  transferId      String
+  batchId         String
+  quantity        Int
+  createdAt       DateTime   @default(now())
+
+  transfer        CrossPMITransfer @relation(fields: [transferId], references: [id])
+  batch           BloodBatch       @relation(fields: [batchId], references: [id])
+
+  @@map("cross_pmi_transfer_items")
+}
+
+model LowStockAlert {
+  id              String   @id @default(cuid())
+  pmiId           String
+  bloodType       BloodType
+  component       BloodComponent
+  currentStock    Int
+  safetyStock     Int
+  isResolved      Boolean  @default(false)
+  resolvedAt      DateTime?
+  createdAt       DateTime @default(now())
+
+  pmi             PMI      @relation(fields: [pmiId], references: [id])
+
+  @@map("low_stock_alerts")
+}
+
+model SmartDonorCall {
+  id              String      @id @default(cuid())
+  pmiId           String
+  bloodType       BloodType
+  rhesus          Rhesus
+  donorIds        String[]
+  messageType     String      @default("WHATSAPP")
+  status          String      @default("SENT")
+  sentAt          DateTime    @default(now())
+  createdAt       DateTime    @default(now())
+
+  @@map("smart_donor_calls")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("INFO")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  oldValue  Json?
+  newValue  Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+model Region {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   @default("CITY")
+  latitude  Float?
+  longitude Float?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("regions")
+}
+
+model SystemParameter {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  group String @default("GENERAL")
+
+  @@map("system_parameters")
+}

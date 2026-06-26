@@ -1,0 +1,208 @@
+================================================================
+  CARA MENJALANKAN PROJECT BLOODCHAIN
+  Supply Chain Darah — BloodChain
+================================================================
+
+STRUKTUR PROJECT:
+  BloodChain/
+  ├── backend/      → NestJS API Server (Port 3001)
+  └── frontend/     → Next.js Web App  (Port 3000)
+
+================================================================
+  PRASYARAT (Pastikan sudah terinstall)
+================================================================
+
+  - Node.js  v18 ke atas  → https://nodejs.org
+  - npm      v9  ke atas  (otomatis ikut Node.js)
+  - Git      (opsional, jika clone dari repo)
+
+  Cek versi:
+    node --version
+    npm --version
+
+================================================================
+  LANGKAH 1 — INSTALL DEPENDENCIES
+================================================================
+
+  Buka dua terminal terpisah (Terminal A dan Terminal B)
+
+  [Terminal A] — Backend:
+    cd d:\Documents\project\BloodChain\backend
+    npm install
+
+  [Terminal B] — Frontend:
+    cd d:\Documents\project\BloodChain\frontend
+    npm install
+
+================================================================
+  LANGKAH 2 — KONFIGURASI ENV (sudah tersedia, tidak perlu diubah)
+================================================================
+
+  File .env backend  : d:\Documents\project\BloodChain\backend\.env
+  File .env frontend : d:\Documents\project\BloodChain\frontend\.env.local
+
+  Konfigurasi default:
+    - DATABASE_URL  → PostgreSQL Supabase (sudah terhubung)
+    - JWT_SECRET    → sudah dikonfigurasi
+    - PORT Backend  → 3001
+    - PORT Frontend → 3000 (default Next.js)
+    - CORS_ORIGIN   → http://localhost:3000
+
+  ⚠ Jika ingin menggunakan database sendiri, ubah DATABASE_URL
+    di file backend/.env sesuai koneksi PostgreSQL Anda,
+    lalu jalankan: npx prisma db push (di folder backend)
+
+================================================================
+  LANGKAH 3 — SETUP DATABASE (opsional, jika database baru)
+================================================================
+
+  Jalankan perintah ini di folder backend jika database kosong:
+
+    cd d:\Documents\project\BloodChain\backend
+
+    Sinkronisasi schema ke database:
+      npx prisma db push
+
+    Generate Prisma Client:
+      npx prisma generate
+
+    (Opsional) Buka Prisma Studio untuk lihat isi database:
+      npx prisma studio
+
+================================================================
+  LANGKAH 4 — JALANKAN BACKEND (NestJS)
+================================================================
+
+  [Terminal A]:
+    cd d:\Documents\project\BloodChain\backend
+    npm run start:dev
+
+  Tunggu sampai muncul pesan:
+    [Nest] Application is running on: http://localhost:3001
+
+  ✅ Backend siap di: http://localhost:3001
+  ✅ API docs (jika tersedia): http://localhost:3001/api
+
+================================================================
+  LANGKAH 5 — JALANKAN FRONTEND (Next.js)
+================================================================
+
+  [Terminal B]:
+    cd d:\Documents\project\BloodChain\frontend
+    npm run dev
+
+  Tunggu sampai muncul pesan:
+    ✓ Ready in ...ms
+    ○ Local: http://localhost:3000
+
+  ✅ Aplikasi bisa dibuka di browser: http://localhost:3000
+
+================================================================
+  LANGKAH 6 — LOGIN KE APLIKASI
+================================================================
+
+  Buka browser → http://localhost:3000
+
+  ── AKUN YANG TERSEDIA ──────────────────────────────────────
+
+  [DONOR]
+    Email    : a@a.com
+    Password : password123
+    Akses    : Daftar donasi, lihat riwayat donasi sendiri
+
+  [PMI]
+    Email    : pmi@gmail.com
+    Password : password123
+    Akses    : Kelola skrining, inventaris, distribusi, permintaan
+
+  [PMI Jakarta]
+    Email    : pmi.jakarta@gmail.com
+    Password : password123
+
+  [PMI Bandung]
+    Email    : pmi.bandung@gmail.com
+    Password : password123
+
+  [PMI Surabaya]
+    Email    : pmi.surabaya@gmail.com
+    Password : password123
+
+  [RUMAH SAKIT]
+    Email    : rumahsakit@gmail.com
+    Password : password123
+    Akses    : Buat permintaan darah, lihat distribusi masuk
+
+================================================================
+  FITUR PER ROLE
+================================================================
+
+  DONOR
+    - Dashboard donor
+    - Daftar donasi darah baru (pilih PMI atau Rumah Sakit)
+    - Riwayat donasi pribadi
+
+  PMI
+    - Dashboard & statistik
+    - Kelola data donor
+    - Skrining darah (update status HIV, Hepatitis, dll)
+    - Inventaris stok darah
+    - Distribusi darah (kirim ke RS atau PMI lain)
+    - Permintaan darah (ajukan ke PMI lain)
+    - Cross-PMI transfer
+    - Peringatan stok rendah
+    - Forecasting kebutuhan
+
+  RUMAH SAKIT
+    - Dashboard
+    - Buat permintaan darah ke PMI
+    - Lihat status distribusi
+    - Riwayat permintaan
+
+================================================================
+  TROUBLESHOOTING
+================================================================
+
+  ❌ "Failed to fetch" / "Network Error"
+     → Pastikan backend (Terminal A) sudah berjalan di port 3001
+     → Pastikan tidak ada firewall/antivirus yang memblokir port 3001
+
+  ❌ "Unauthorized 401"
+     → Token sesi kedaluwarsa, silakan login ulang
+
+  ❌ Prisma error / Cannot find module '@prisma/client'
+     → Jalankan: cd backend && npx prisma generate
+
+  ❌ Port sudah dipakai
+     → Backend: ubah PORT di backend/.env
+     → Frontend: jalankan npm run dev -- -p 3001 (ganti port)
+
+  ❌ Database tidak terhubung
+     → Cek koneksi internet (database di Supabase cloud)
+     → Cek nilai DATABASE_URL di backend/.env
+
+================================================================
+  PERINTAH BERGUNA
+================================================================
+
+  Backend:
+    npm run start:dev     → Jalankan mode development (auto-reload)
+    npm run start         → Jalankan mode production
+    npm run build         → Build project
+    npx prisma studio     → GUI database browser
+    npx prisma db push    → Sinkronisasi schema ke database
+    npx prisma generate   → Regenerate Prisma Client
+
+  Frontend:
+    npm run dev           → Jalankan mode development
+    npm run build         → Build untuk production
+    npm run start         → Jalankan hasil build production
+    npm run lint          → Cek TypeScript & linting errors
+
+================================================================
+  PORT YANG DIGUNAKAN
+================================================================
+
+    3000  → Frontend (Next.js)
+    3001  → Backend API (NestJS)
+
+================================================================
