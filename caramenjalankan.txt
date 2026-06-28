@@ -9,111 +9,181 @@ STRUKTUR PROJECT:
   └── frontend/     → Next.js Web App  (Port 3000)
 
 ================================================================
-  PRASYARAT (Pastikan sudah terinstall)
+  A. MENJALANKAN DI LOKAL (Development)
 ================================================================
 
-  - Node.js  v18 ke atas  → https://nodejs.org
-  - npm      v9  ke atas  (otomatis ikut Node.js)
-  - Git      (opsional, jika clone dari repo)
+  PRASYARAT:
+    - Node.js v18+  → https://nodejs.org
+    - npm v9+       (ikut Node.js)
 
-  Cek versi:
-    node --version
-    npm --version
+  ── Langkah 1: Install Dependencies ──────────────────────────
 
-================================================================
-  LANGKAH 1 — INSTALL DEPENDENCIES
-================================================================
+    [Terminal A] Backend:
+      cd d:\Documents\project\BloodChain\backend
+      npm install
 
-  Buka dua terminal terpisah (Terminal A dan Terminal B)
+    [Terminal B] Frontend:
+      cd d:\Documents\project\BloodChain\frontend
+      npm install
 
-  [Terminal A] — Backend:
-    cd d:\Documents\project\BloodChain\backend
-    npm install
+  ── Langkah 2: Konfigurasi ENV (sudah ada, tidak perlu diubah)
 
-  [Terminal B] — Frontend:
-    cd d:\Documents\project\BloodChain\frontend
-    npm install
+    backend/.env         → DATABASE_URL, JWT_SECRET, PORT=3001
+    frontend/.env.local  → NEXT_PUBLIC_API_URL=http://localhost:3001
 
-================================================================
-  LANGKAH 2 — KONFIGURASI ENV (sudah tersedia, tidak perlu diubah)
-================================================================
+  ── Langkah 3: Jalankan Backend ──────────────────────────────
 
-  File .env backend  : d:\Documents\project\BloodChain\backend\.env
-  File .env frontend : d:\Documents\project\BloodChain\frontend\.env.local
+    [Terminal A]:
+      cd d:\Documents\project\BloodChain\backend
+      npm run start:dev
 
-  Konfigurasi default:
-    - DATABASE_URL  → PostgreSQL Supabase (sudah terhubung)
-    - JWT_SECRET    → sudah dikonfigurasi
-    - PORT Backend  → 3001
-    - PORT Frontend → 3000 (default Next.js)
-    - CORS_ORIGIN   → http://localhost:3000
+    Tunggu: "[Nest] Application is running on: http://localhost:3001"
 
-  ⚠ Jika ingin menggunakan database sendiri, ubah DATABASE_URL
-    di file backend/.env sesuai koneksi PostgreSQL Anda,
-    lalu jalankan: npx prisma db push (di folder backend)
+  ── Langkah 4: Jalankan Frontend ─────────────────────────────
 
-================================================================
-  LANGKAH 3 — SETUP DATABASE (opsional, jika database baru)
-================================================================
+    [Terminal B]:
+      cd d:\Documents\project\BloodChain\frontend
+      npm run dev
 
-  Jalankan perintah ini di folder backend jika database kosong:
+    Tunggu: "✓ Ready — Local: http://localhost:3000"
 
-    cd d:\Documents\project\BloodChain\backend
+  ── Langkah 5: Buka Browser ──────────────────────────────────
 
-    Sinkronisasi schema ke database:
-      npx prisma db push
-
-    Generate Prisma Client:
-      npx prisma generate
-
-    (Opsional) Buka Prisma Studio untuk lihat isi database:
-      npx prisma studio
+    http://localhost:3000
 
 ================================================================
-  LANGKAH 4 — JALANKAN BACKEND (NestJS)
+  B. DEPLOY KE PRODUCTION (Vercel + Railway)
 ================================================================
 
-  [Terminal A]:
-    cd d:\Documents\project\BloodChain\backend
-    npm run start:dev
+  REKOMENDASI STACK:
+    Frontend  → Vercel    (gratis selamanya)
+    Backend   → Railway   ($5 kredit/bulan, cukup untuk project kecil)
+    Database  → Supabase  (sudah terhubung, tidak perlu diubah)
 
-  Tunggu sampai muncul pesan:
-    [Nest] Application is running on: http://localhost:3001
+  ⚠ PENTING: Pastikan project sudah di GitHub sebelum deploy!
+    Upload semua file kecuali node_modules dan .env ke GitHub.
 
-  ✅ Backend siap di: http://localhost:3001
-  ✅ API docs (jika tersedia): http://localhost:3001/api
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  LANGKAH 1 — DEPLOY BACKEND KE RAILWAY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. Buka https://railway.app → Login dengan GitHub
+
+  2. Klik "New Project" → "Deploy from GitHub repo"
+
+  3. Pilih repo BloodChain, lalu pilih folder "backend"
+     (Railway bisa deploy subfolder dari monorepo)
+
+     Atau: Gunakan Root Directory = "backend" di settings Railway
+
+  4. Railway akan otomatis mendeteksi NestJS.
+     Pastikan settings:
+       - Build Command : npm ci && npm run build
+       - Start Command : npm run start:prod
+
+  5. Tambahkan Environment Variables di Railway:
+     (Klik tab "Variables" → tambahkan satu per satu)
+
+       DATABASE_URL   = postgresql://postgres.jguffbq...  (salin dari backend/.env)
+       JWT_SECRET     = Q0UKxCxKKak...                    (salin dari backend/.env)
+       JWT_EXPIRATION = 3600S
+       NODE_ENV       = production
+       CORS_ORIGIN    = https://nama-project-kamu.vercel.app
+       PORT           = 3001
+
+       ⚠ CORS_ORIGIN diisi URL Vercel setelah frontend di-deploy.
+         Bisa diupdate nanti.
+
+  6. Klik "Deploy" → Tunggu build selesai
+
+  7. Setelah berhasil, Railway memberi URL seperti:
+       https://bloodchain-backend-production.up.railway.app
+
+  ✅ Catat URL ini, akan dipakai di langkah berikutnya!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  LANGKAH 2 — DEPLOY FRONTEND KE VERCEL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. Buka https://vercel.com → Login dengan GitHub
+
+  2. Klik "Add New Project" → Pilih repo BloodChain
+
+  3. Di bagian "Configure Project":
+       Root Directory : frontend   ← PENTING! Ubah ke "frontend"
+       Framework      : Next.js    (otomatis terdeteksi)
+
+  4. Klik "Environment Variables" → Tambahkan:
+
+       NEXT_PUBLIC_API_URL    = https://bloodchain-backend-production.up.railway.app
+       NEXT_PUBLIC_SOCKET_URL = https://bloodchain-backend-production.up.railway.app
+
+       (Ganti dengan URL Railway dari langkah 1)
+
+  5. Klik "Deploy" → Tunggu selesai (biasanya 2-3 menit)
+
+  6. Vercel memberi URL seperti:
+       https://bloodchain-xyz.vercel.app
+
+  ✅ Aplikasi sudah online!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  LANGKAH 3 — UPDATE CORS DI RAILWAY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Setelah tahu URL Vercel, update environment variable Railway:
+
+    CORS_ORIGIN = https://bloodchain-xyz.vercel.app
+
+  Railway akan auto-restart backend dengan konfigurasi baru.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ALTERNATIF BACKEND: KOYEB (Gratis selamanya, always-on)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Koyeb lebih benar-benar gratis tapi sedikit lebih manual:
+
+  1. Buka https://app.koyeb.com → Sign up
+  2. "Create Service" → "GitHub" → Pilih repo
+  3. Settings:
+       Root Directory : backend
+       Build Command  : npm ci && npm run build
+       Run Command    : npm run start:prod
+       Port           : 3001
+  4. Tambahkan environment variables (sama seperti Railway)
+  5. Deploy
+
+  URL akan berbentuk: https://nama-app.koyeb.app
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ALTERNATIF BACKEND: RENDER (Gratis tapi tidur 15 menit)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ⚠ Catatan: Render free tier "tidur" setelah 15 menit tidak
+    aktif. Request pertama butuh ~30-60 detik untuk bangun.
+    WebSocket mungkin tidak stabil di free tier.
+
+  1. Buka https://render.com → Sign up
+  2. "New +" → "Web Service" → Connect GitHub
+  3. Settings:
+       Root Directory : backend
+       Build Command  : npm ci && npm run build
+       Start Command  : npm run start:prod
+       Port           : 10000 (Render default)
+  4. Tambahkan environment variables
+  5. Deploy
 
 ================================================================
-  LANGKAH 5 — JALANKAN FRONTEND (Next.js)
+  C. AKUN LOGIN
 ================================================================
-
-  [Terminal B]:
-    cd d:\Documents\project\BloodChain\frontend
-    npm run dev
-
-  Tunggu sampai muncul pesan:
-    ✓ Ready in ...ms
-    ○ Local: http://localhost:3000
-
-  ✅ Aplikasi bisa dibuka di browser: http://localhost:3000
-
-================================================================
-  LANGKAH 6 — LOGIN KE APLIKASI
-================================================================
-
-  Buka browser → http://localhost:3000
-
-  ── AKUN YANG TERSEDIA ──────────────────────────────────────
 
   [DONOR]
     Email    : a@a.com
     Password : password123
-    Akses    : Daftar donasi, lihat riwayat donasi sendiri
 
   [PMI]
     Email    : pmi@gmail.com
     Password : password123
-    Akses    : Kelola skrining, inventaris, distribusi, permintaan
 
   [PMI Jakarta]
     Email    : pmi.jakarta@gmail.com
@@ -130,79 +200,58 @@ STRUKTUR PROJECT:
   [RUMAH SAKIT]
     Email    : rumahsakit@gmail.com
     Password : password123
-    Akses    : Buat permintaan darah, lihat distribusi masuk
 
 ================================================================
-  FITUR PER ROLE
+  D. TROUBLESHOOTING DEPLOYMENT
 ================================================================
 
-  DONOR
-    - Dashboard donor
-    - Daftar donasi darah baru (pilih PMI atau Rumah Sakit)
-    - Riwayat donasi pribadi
+  ❌ "CORS Error" di browser setelah deploy
+     → Pastikan CORS_ORIGIN di Railway/Koyeb = URL Vercel yang benar
+     → URL harus persis, tanpa trailing slash: https://xxx.vercel.app
 
-  PMI
-    - Dashboard & statistik
-    - Kelola data donor
-    - Skrining darah (update status HIV, Hepatitis, dll)
-    - Inventaris stok darah
-    - Distribusi darah (kirim ke RS atau PMI lain)
-    - Permintaan darah (ajukan ke PMI lain)
-    - Cross-PMI transfer
-    - Peringatan stok rendah
-    - Forecasting kebutuhan
+  ❌ Build gagal: "prisma generate failed"
+     → Tambahkan DATABASE_URL di environment variables platform
+     → Pastikan DATABASE_URL sama persis dengan yang di .env lokal
 
-  RUMAH SAKIT
-    - Dashboard
-    - Buat permintaan darah ke PMI
-    - Lihat status distribusi
-    - Riwayat permintaan
+  ❌ "Cannot find module @prisma/client"
+     → Pastikan DATABASE_URL sudah diset di environment variables
+     → postinstall script sudah ada di package.json (sudah ditambahkan)
 
-================================================================
-  TROUBLESHOOTING
-================================================================
+  ❌ WebSocket tidak konek setelah deploy
+     → Railway dan Koyeb support WebSocket secara default
+     → Render free tier tidak stabil untuk WebSocket, upgrade ke paid
 
-  ❌ "Failed to fetch" / "Network Error"
-     → Pastikan backend (Terminal A) sudah berjalan di port 3001
-     → Pastikan tidak ada firewall/antivirus yang memblokir port 3001
+  ❌ Environment variables tidak terbaca
+     → Pastikan tidak ada spasi di awal/akhir nilai variable
+     → Restart deployment setelah menambah variable baru
 
-  ❌ "Unauthorized 401"
-     → Token sesi kedaluwarsa, silakan login ulang
-
-  ❌ Prisma error / Cannot find module '@prisma/client'
-     → Jalankan: cd backend && npx prisma generate
-
-  ❌ Port sudah dipakai
-     → Backend: ubah PORT di backend/.env
-     → Frontend: jalankan npm run dev -- -p 3001 (ganti port)
-
-  ❌ Database tidak terhubung
-     → Cek koneksi internet (database di Supabase cloud)
-     → Cek nilai DATABASE_URL di backend/.env
+  ❌ Vercel error: "Cannot find module"
+     → Pastikan Root Directory = "frontend" bukan "."
 
 ================================================================
-  PERINTAH BERGUNA
+  E. PERINTAH BERGUNA
 ================================================================
 
   Backend:
-    npm run start:dev     → Jalankan mode development (auto-reload)
-    npm run start         → Jalankan mode production
-    npm run build         → Build project
-    npx prisma studio     → GUI database browser
-    npx prisma db push    → Sinkronisasi schema ke database
-    npx prisma generate   → Regenerate Prisma Client
+    npm run start:dev   → Development (auto-reload)
+    npm run build       → Build production
+    npm run start:prod  → Jalankan production build
 
   Frontend:
-    npm run dev           → Jalankan mode development
-    npm run build         → Build untuk production
-    npm run start         → Jalankan hasil build production
-    npm run lint          → Cek TypeScript & linting errors
+    npm run dev         → Development
+    npm run build       → Build production
+
+  Database:
+    npx prisma studio   → GUI database
+    npx prisma db push  → Sync schema ke database
+    npx prisma generate → Regenerate Prisma Client
 
 ================================================================
   PORT YANG DIGUNAKAN
 ================================================================
 
-    3000  → Frontend (Next.js)
-    3001  → Backend API (NestJS)
+    3000 → Frontend (Next.js) — lokal
+    3001 → Backend  (NestJS)  — lokal
 
+    Production: Port ditentukan otomatis oleh Railway/Vercel
 ================================================================
